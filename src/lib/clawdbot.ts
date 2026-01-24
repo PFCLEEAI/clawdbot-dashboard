@@ -232,14 +232,125 @@ export async function getCalendarEvents(): Promise<CalendarEvent[]> {
   return [];
 }
 
+export interface UsageData {
+  totalCost: number;
+  todayCost: number;
+  models: {
+    name: string;
+    cost: number;
+    tokens: number;
+  }[];
+}
+
+export interface Tweet {
+  id: string;
+  author: string;
+  handle: string;
+  text: string;
+  time: string;
+  likes?: number;
+}
+
+export async function getUsageStats(): Promise<UsageData | null> {
+  // Try CodexBar for usage stats
+  const result = exec("codexbar cost --json 2>/dev/null");
+  if (result) {
+    try {
+      const data = JSON.parse(result);
+      const models = Object.entries(data.models || {}).map(([name, info]: [string, any]) => ({
+        name,
+        cost: info.cost || 0,
+        tokens: info.tokens || info.inputTokens + info.outputTokens || 0,
+      }));
+      
+      return {
+        totalCost: data.totalCost || data.total || 0,
+        todayCost: data.todayCost || 0,
+        models: models.sort((a, b) => b.cost - a.cost),
+      };
+    } catch {
+      // Fall through
+    }
+  }
+  return null;
+}
+
+export async function getTweets(): Promise<Tweet[]> {
+  // Get tweets from followed accounts via bird CLI
+  const result = exec('bird search "from:steipete OR from:thekitze OR from:anthropaboratory" -n 10 --json 2>/dev/null', 30000);
+  if (result) {
+    try {
+      const tweets = JSON.parse(result);
+      return tweets.slice(0, 10).map((t: any) => ({
+        id: t.id,
+        author: t.author?.name || "Unknown",
+        handle: t.author?.username || "unknown",
+        text: t.text || "",
+        time: t.createdAt || new Date().toISOString(),
+        likes: t.likeCount,
+      }));
+    } catch {
+      // Fall through
+    }
+  }
+  return [];
+}
+
+export async function getNewspaperPath(): Promise<string | null> {
+  const today = new Date().toISOString().split("T")[0];
+  const path = `${process.env.HOME}/.clawdbot/tmp/newspaper-${today}.png`;
+  
+  // Check if file exists
+  const result = exec(`test -f "${path}" && echo "exists"`);
+  if (result === "exists") {
+    return `/api/newspaper?date=${today}`;
+  }
+  return null;
+}
+
+export async function getBriefingData() {
+  const today = new Date().toISOString().split("T")[0];
+  const weather = await getWeather();
+  const emails = await getEmails();
+  const calendar = await getCalendarEvents();
+  
+  return {
+    date: today,
+    weather: {
+      temperature: weather.temperature,
+      condition: weather.condition,
+      humidity: weather.humidity,
+      wind: weather.wind,
+    },
+    emailSummary: {
+      total: emails.length,
+      high: emails.filter(e => e.priority === "high").length,
+      medium: emails.filter(e => e.priority === "medium").length,
+      low: emails.filter(e => e.priority === "low").length,
+    },
+    calendarSummary: {
+      eventCount: calendar.length,
+      nextMeeting: calendar[0]?.title,
+    },
+    sports: [
+      { team: "Arsenal", lastResult: "3-1 vs Inter", nextMatch: "Sun vs Man Utd" },
+      { team: "PSG", lastResult: "1-0 vs Auxerre", nextMatch: "Wed vs Newcastle" },
+    ],
+  };
+}
+
 // Aggregate all dashboard data
 export async function getDashboardData() {
-  const [gateway, cron, weather, emails, calendar] = await Promise.all([
+  const [gateway, cron, weather, emails, calendar, usage, tweets, newspaperPath, briefing] = await Promise.all([
     getGatewayStatus(),
     getCronJobs(),
     getWeather(),
     getEmails(),
     getCalendarEvents(),
+    getUsageStats(),
+    getTweets(),
+    getNewspaperPath(),
+    getBriefingData(),
   ]);
   
   return {
@@ -248,6 +359,10 @@ export async function getDashboardData() {
     weather,
     emails,
     calendar,
+    usage,
+    tweets,
+    newspaperPath,
+    briefing,
     fetchedAt: new Date().toISOString(),
   };
 }

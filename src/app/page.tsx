@@ -6,6 +6,10 @@ import { CalendarWidget } from "@/components/widgets/CalendarWidget";
 import { EmailWidget } from "@/components/widgets/EmailWidget";
 import { CronWidget } from "@/components/widgets/CronWidget";
 import { SportsWidget } from "@/components/widgets/SportsWidget";
+import { UsageWidget } from "@/components/widgets/UsageWidget";
+import { TwitterWidget } from "@/components/widgets/TwitterWidget";
+import { BriefingWidget } from "@/components/widgets/BriefingWidget";
+import { NewspaperWidget } from "@/components/widgets/NewspaperWidget";
 import { useDashboard } from "@/hooks/useDashboard";
 import { Button } from "@/components/ui/button";
 
@@ -129,6 +133,8 @@ export default function Dashboard() {
       }
     : undefined;
 
+  const today = new Date().toISOString().split("T")[0];
+
   return (
     <div className="min-h-screen bg-background">
       <Header weather={weather} />
@@ -163,16 +169,27 @@ export default function Dashboard() {
             unreadCount={emails.length}
           />
 
-          {/* Row 2: Cron, Sports */}
+          {/* Row 2: Cron, Sports, Usage */}
           <CronWidget jobs={cronJobs} />
           <SportsWidget teams={sportsData.teams} />
+          <UsageWidget usage={data?.usage || null} />
 
+          {/* Row 3: Daily Briefing (spans 2 cols) & Newspaper */}
+          <BriefingWidget briefing={data?.briefing || null} />
+          <NewspaperWidget 
+            imagePath={data?.newspaperPath || null}
+            date={today}
+          />
+
+          {/* Row 4: Twitter Digest (spans 2 cols) + placeholder */}
+          <TwitterWidget tweets={data?.tweets || []} />
+          
           {/* Placeholder for more widgets */}
           <div className="border-2 border-dashed border-muted rounded-lg p-6 flex items-center justify-center text-muted-foreground">
             <div className="text-center">
               <p className="text-2xl mb-2">🚧</p>
-              <p className="text-sm">More widgets coming...</p>
-              <p className="text-xs mt-1">Usage stats, Twitter, etc.</p>
+              <p className="text-sm">Phase 4 coming...</p>
+              <p className="text-xs mt-1">Topics, Timeline, Command Palette</p>
             </div>
           </div>
         </div>

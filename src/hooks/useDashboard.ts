@@ -36,6 +36,44 @@ export interface DashboardData {
     end?: string;
     isAllDay: boolean;
   }[];
+  usage: {
+    totalCost: number;
+    todayCost: number;
+    models: { name: string; cost: number; tokens: number }[];
+  } | null;
+  tweets: {
+    id: string;
+    author: string;
+    handle: string;
+    text: string;
+    time: string;
+    likes?: number;
+  }[];
+  newspaperPath: string | null;
+  briefing: {
+    date: string;
+    weather?: {
+      temperature: string;
+      condition: string;
+      humidity: string;
+      wind: string;
+    };
+    emailSummary?: {
+      total: number;
+      high: number;
+      medium: number;
+      low: number;
+    };
+    calendarSummary?: {
+      eventCount: number;
+      nextMeeting?: string;
+    };
+    sports?: {
+      team: string;
+      lastResult?: string;
+      nextMatch?: string;
+    }[];
+  } | null;
   fetchedAt: string;
 }
 
