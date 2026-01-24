@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { StatusWidget } from "@/components/widgets/StatusWidget";
 import { CalendarWidget } from "@/components/widgets/CalendarWidget";
@@ -14,11 +15,12 @@ import { TopicsWidget } from "@/components/widgets/TopicsWidget";
 import { QuickCaptureWidget } from "@/components/widgets/QuickCaptureWidget";
 import { TimelineWidget } from "@/components/widgets/TimelineWidget";
 import { CommandPalette } from "@/components/CommandPalette";
+import { SettingsPanel } from "@/components/SettingsPanel";
 import { useDashboard } from "@/hooks/useDashboard";
+import { useDashboardSettings } from "@/hooks/useDashboardSettings";
 import { Button } from "@/components/ui/button";
-import { useCallback } from "react";
 
-// Sports data is static for now (would need a separate API)
+// Sports data is static for now
 const sportsData = {
   teams: [
     {
@@ -52,10 +54,8 @@ function formatTime(dateStr: string): string {
 
 function formatNextRun(nextRunAtMs: number): string {
   if (!nextRunAtMs) return "Not scheduled";
-  
   const now = Date.now();
   const diff = nextRunAtMs - now;
-  
   if (diff < 0) return "Overdue";
   if (diff < 3600000) {
     const mins = Math.floor(diff / 60000);
@@ -65,15 +65,25 @@ function formatNextRun(nextRunAtMs: number): string {
     const hours = Math.floor(diff / 3600000);
     return `In ${hours} hour${hours !== 1 ? "s" : ""}`;
   }
-  
   const date = new Date(nextRunAtMs);
   return date.toLocaleDateString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit" });
 }
 
 export default function Dashboard() {
   const { data, loading, error, lastRefresh, refresh } = useDashboard({
-    refreshInterval: 60000, // Refresh every minute
+    refreshInterval: 60000,
   });
+  
+  const {
+    mode,
+    visibleWidgets,
+    isLoaded,
+    setMode,
+    setVisibleWidgets,
+    getGreeting,
+  } = useDashboardSettings();
+
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // Command palette commands
   const commands = [
@@ -87,26 +97,28 @@ export default function Dashboard() {
       action: refresh,
     },
     {
-      id: "briefing",
-      name: "Generate Briefing",
-      description: "Create today's daily briefing",
-      icon: "📰",
+      id: "settings",
+      name: "Open Settings",
+      description: "Configure dashboard",
+      icon: "⚙️",
       category: "Actions",
-      action: async () => {
-        await fetch("/api/briefing/generate", { method: "POST" });
-        refresh();
-      },
+      action: () => setSettingsOpen(true),
     },
     {
-      id: "newspaper",
-      name: "Generate Newspaper",
-      description: "Create The Daily Clawd",
-      icon: "🗞️",
-      category: "Actions",
-      action: async () => {
-        await fetch("/api/newspaper/generate", { method: "POST" });
-        refresh();
-      },
+      id: "mode-work",
+      name: "Switch to Work Mode",
+      description: "Focus on productivity",
+      icon: "💼",
+      category: "Mode",
+      action: () => setMode("work"),
+    },
+    {
+      id: "mode-personal",
+      name: "Switch to Personal Mode",
+      description: "Relax and unwind",
+      icon: "🏠",
+      category: "Mode",
+      action: () => setMode("personal"),
     },
     {
       id: "capture-note",
@@ -128,7 +140,7 @@ export default function Dashboard() {
     {
       id: "capture-task",
       name: "Quick Task",
-      description: "Add a task to your list",
+      description: "Add a task",
       icon: "☑️",
       category: "Capture",
       action: () => {
@@ -145,23 +157,14 @@ export default function Dashboard() {
     {
       id: "open-github",
       name: "Open GitHub Repo",
-      description: "Go to clawdbot-dashboard repo",
       icon: "🐙",
       category: "Links",
       action: () => window.open("https://github.com/jpequegn/clawdbot-dashboard", "_blank"),
     },
-    {
-      id: "open-clawdbot",
-      name: "Open Clawdbot Docs",
-      description: "Documentation for Clawdbot",
-      icon: "📚",
-      category: "Links",
-      action: () => window.open("https://docs.clawd.bot", "_blank"),
-    },
   ];
 
   // Loading state
-  if (loading && !data) {
+  if ((loading && !data) || !isLoaded) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -172,7 +175,7 @@ export default function Dashboard() {
     );
   }
 
-  // Error state (with retry)
+  // Error state
   if (error && !data) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -180,15 +183,13 @@ export default function Dashboard() {
           <span className="text-4xl">😵</span>
           <p className="mt-4 text-destructive">Failed to load dashboard</p>
           <p className="text-sm text-muted-foreground">{error}</p>
-          <Button onClick={refresh} className="mt-4">
-            Retry
-          </Button>
+          <Button onClick={refresh} className="mt-4">Retry</Button>
         </div>
       </div>
     );
   }
 
-  // Transform data for widgets
+  // Transform data
   const gatewayStatus = data?.gateway.running ? "running" : "stopped";
   const channels = data?.gateway.channels || [];
   
@@ -217,75 +218,81 @@ export default function Dashboard() {
     }));
 
   const weather = data?.weather
-    ? {
-        temperature: data.weather.temperature,
-        condition: data.weather.condition,
-      }
+    ? { temperature: data.weather.temperature, condition: data.weather.condition }
     : undefined;
 
   const today = new Date().toISOString().split("T")[0];
+  const isVisible = (id: string) => visibleWidgets.includes(id);
 
   return (
     <div className="min-h-screen bg-background">
-      <Header weather={weather} />
+      <Header 
+        weather={weather} 
+        mode={mode}
+        greeting={getGreeting()}
+        onSettingsClick={() => setSettingsOpen(true)}
+      />
 
       <main className="container mx-auto p-6">
-        {/* Refresh indicator */}
+        {/* Refresh bar */}
         <div className="flex items-center justify-between mb-6">
           <div className="text-sm text-muted-foreground">
-            {lastRefresh && (
-              <span>
-                Last updated: {lastRefresh.toLocaleTimeString()}
-              </span>
-            )}
-            {error && (
-              <span className="ml-2 text-destructive">(refresh failed)</span>
-            )}
+            {lastRefresh && <span>Last updated: {lastRefresh.toLocaleTimeString()}</span>}
+            {error && <span className="ml-2 text-destructive">(refresh failed)</span>}
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">Press ⌘K for commands</span>
-            <Button variant="outline" size="sm" onClick={refresh}>
-              ↻ Refresh
-            </Button>
+            <Button variant="outline" size="sm" onClick={refresh}>↻ Refresh</Button>
           </div>
         </div>
 
+        {/* Widget Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Row 1: Status, Calendar, Email */}
-          <StatusWidget
-            gatewayStatus={gatewayStatus as "running" | "stopped" | "unknown"}
-            channels={channels}
-          />
-          <CalendarWidget events={calendarEvents} />
-          <EmailWidget
-            emails={emails}
-            unreadCount={emails.length}
-          />
+          {/* Row 1 */}
+          {isVisible("status") && (
+            <StatusWidget
+              gatewayStatus={gatewayStatus as "running" | "stopped" | "unknown"}
+              channels={channels}
+            />
+          )}
+          {isVisible("calendar") && <CalendarWidget events={calendarEvents} />}
+          {isVisible("email") && (
+            <EmailWidget emails={emails} unreadCount={emails.length} />
+          )}
 
-          {/* Row 2: Cron, Sports, Usage */}
-          <CronWidget jobs={cronJobs} />
-          <SportsWidget teams={sportsData.teams} />
-          <UsageWidget usage={data?.usage || null} />
+          {/* Row 2 */}
+          {isVisible("cron") && <CronWidget jobs={cronJobs} />}
+          {isVisible("sports") && <SportsWidget teams={sportsData.teams} />}
+          {isVisible("usage") && <UsageWidget usage={data?.usage || null} />}
 
-          {/* Row 3: Topics (2 cols) & Timeline */}
-          <TopicsWidget topics={data?.topics || []} />
-          <TimelineWidget events={data?.timeline || []} />
+          {/* Row 3 */}
+          {isVisible("topics") && <TopicsWidget topics={data?.topics || []} />}
+          {isVisible("timeline") && <TimelineWidget events={data?.timeline || []} />}
 
-          {/* Row 4: Daily Briefing (2 cols) & Newspaper */}
-          <BriefingWidget briefing={data?.briefing || null} />
-          <NewspaperWidget 
-            imagePath={data?.newspaperPath || null}
-            date={today}
-          />
+          {/* Row 4 */}
+          {isVisible("briefing") && <BriefingWidget briefing={data?.briefing || null} />}
+          {isVisible("newspaper") && (
+            <NewspaperWidget imagePath={data?.newspaperPath || null} date={today} />
+          )}
 
-          {/* Row 5: Twitter Digest (2 cols) + Quick Capture */}
-          <TwitterWidget tweets={data?.tweets || []} />
-          <QuickCaptureWidget />
+          {/* Row 5 */}
+          {isVisible("twitter") && <TwitterWidget tweets={data?.tweets || []} />}
+          {isVisible("capture") && <QuickCaptureWidget />}
         </div>
       </main>
 
       {/* Command Palette */}
       <CommandPalette commands={commands} />
+
+      {/* Settings Panel */}
+      <SettingsPanel
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        mode={mode}
+        onModeChange={setMode}
+        visibleWidgets={visibleWidgets}
+        onWidgetsChange={setVisibleWidgets}
+      />
     </div>
   );
 }
