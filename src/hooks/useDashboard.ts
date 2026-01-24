@@ -74,6 +74,21 @@ export interface DashboardData {
       nextMatch?: string;
     }[];
   } | null;
+  topics: {
+    id: string;
+    name: string;
+    status: "active" | "paused" | "completed";
+    tasks?: { total: number; done: number };
+    lastUpdated?: string;
+  }[];
+  timeline: {
+    id: string;
+    type: "cron" | "message" | "briefing" | "session" | "capture";
+    title: string;
+    description?: string;
+    timestamp: string;
+    status?: "success" | "error" | "pending";
+  }[];
   fetchedAt: string;
 }
 

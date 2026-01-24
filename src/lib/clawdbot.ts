@@ -339,9 +339,108 @@ export async function getBriefingData() {
   };
 }
 
+export interface Topic {
+  id: string;
+  name: string;
+  status: "active" | "paused" | "completed";
+  tasks?: { total: number; done: number };
+  lastUpdated?: string;
+}
+
+export interface TimelineEvent {
+  id: string;
+  type: "cron" | "message" | "briefing" | "session" | "capture";
+  title: string;
+  description?: string;
+  timestamp: string;
+  status?: "success" | "error" | "pending";
+}
+
+export async function getTopics(): Promise<Topic[]> {
+  // Read from TODO.md on the external drive
+  const todoPath = "/Volumes/Extreme Pro/pai-context/TODO.md";
+  const result = exec(`cat "${todoPath}" 2>/dev/null`);
+  
+  if (!result) return [];
+  
+  const topics: Topic[] = [];
+  
+  // Parse sections from TODO.md
+  const sections = [
+    { pattern: /### Clawdbot Enhancement Ideas[\s\S]*?(?=###|$)/, name: "Clawdbot Enhancements" },
+    { pattern: /### agent-readiness-score[\s\S]*?(?=###|$)/, name: "Agent Readiness Score" },
+    { pattern: /### AI Transformation[\s\S]*?(?=###|$)/, name: "AI Transformation" },
+  ];
+  
+  sections.forEach((section, index) => {
+    const match = result.match(section.pattern);
+    if (match) {
+      const content = match[0];
+      const doneCount = (content.match(/- \[x\]/gi) || []).length;
+      const totalCount = (content.match(/- \[[ x]\]/gi) || []).length;
+      
+      if (totalCount > 0) {
+        topics.push({
+          id: String(index),
+          name: section.name,
+          status: doneCount === totalCount ? "completed" : "active",
+          tasks: { total: totalCount, done: doneCount },
+          lastUpdated: "today",
+        });
+      }
+    }
+  });
+  
+  return topics;
+}
+
+export async function getTimelineEvents(): Promise<TimelineEvent[]> {
+  const events: TimelineEvent[] = [];
+  
+  // Get recent cron runs
+  const cronResult = exec("clawdbot cron runs --limit 10 --json 2>/dev/null");
+  if (cronResult) {
+    try {
+      const runs = JSON.parse(cronResult);
+      (runs.runs || runs || []).slice(0, 5).forEach((run: any, idx: number) => {
+        events.push({
+          id: `cron-${idx}`,
+          type: "cron",
+          title: run.jobName || run.name || "Cron Job",
+          description: run.status === "error" ? run.error : undefined,
+          timestamp: run.startedAt || run.timestamp || new Date().toISOString(),
+          status: run.status === "ok" ? "success" : run.status === "error" ? "error" : "pending",
+        });
+      });
+    } catch {
+      // Ignore
+    }
+  }
+  
+  // Add briefing event if exists
+  const today = new Date().toISOString().split("T")[0];
+  const briefingPath = `${process.env.HOME}/.clawdbot/tmp/newspaper-${today}.png`;
+  const briefingExists = exec(`test -f "${briefingPath}" && echo "exists"`);
+  if (briefingExists === "exists") {
+    events.push({
+      id: "briefing-today",
+      type: "briefing",
+      title: "Daily Briefing Generated",
+      description: "The Daily Clawd newspaper created",
+      timestamp: new Date().toISOString(),
+      status: "success",
+    });
+  }
+  
+  // Sort by timestamp descending
+  events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  
+  return events.slice(0, 10);
+}
+
 // Aggregate all dashboard data
 export async function getDashboardData() {
-  const [gateway, cron, weather, emails, calendar, usage, tweets, newspaperPath, briefing] = await Promise.all([
+  const [gateway, cron, weather, emails, calendar, usage, tweets, newspaperPath, briefing, topics, timeline] = await Promise.all([
     getGatewayStatus(),
     getCronJobs(),
     getWeather(),
@@ -351,6 +450,8 @@ export async function getDashboardData() {
     getTweets(),
     getNewspaperPath(),
     getBriefingData(),
+    getTopics(),
+    getTimelineEvents(),
   ]);
   
   return {
@@ -363,6 +464,8 @@ export async function getDashboardData() {
     tweets,
     newspaperPath,
     briefing,
+    topics,
+    timeline,
     fetchedAt: new Date().toISOString(),
   };
 }

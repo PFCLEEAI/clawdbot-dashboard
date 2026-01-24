@@ -10,8 +10,13 @@ import { UsageWidget } from "@/components/widgets/UsageWidget";
 import { TwitterWidget } from "@/components/widgets/TwitterWidget";
 import { BriefingWidget } from "@/components/widgets/BriefingWidget";
 import { NewspaperWidget } from "@/components/widgets/NewspaperWidget";
+import { TopicsWidget } from "@/components/widgets/TopicsWidget";
+import { QuickCaptureWidget } from "@/components/widgets/QuickCaptureWidget";
+import { TimelineWidget } from "@/components/widgets/TimelineWidget";
+import { CommandPalette } from "@/components/CommandPalette";
 import { useDashboard } from "@/hooks/useDashboard";
 import { Button } from "@/components/ui/button";
+import { useCallback } from "react";
 
 // Sports data is static for now (would need a separate API)
 const sportsData = {
@@ -69,6 +74,91 @@ export default function Dashboard() {
   const { data, loading, error, lastRefresh, refresh } = useDashboard({
     refreshInterval: 60000, // Refresh every minute
   });
+
+  // Command palette commands
+  const commands = [
+    {
+      id: "refresh",
+      name: "Refresh Dashboard",
+      description: "Reload all data",
+      icon: "↻",
+      shortcut: "⌘R",
+      category: "Actions",
+      action: refresh,
+    },
+    {
+      id: "briefing",
+      name: "Generate Briefing",
+      description: "Create today's daily briefing",
+      icon: "📰",
+      category: "Actions",
+      action: async () => {
+        await fetch("/api/briefing/generate", { method: "POST" });
+        refresh();
+      },
+    },
+    {
+      id: "newspaper",
+      name: "Generate Newspaper",
+      description: "Create The Daily Clawd",
+      icon: "🗞️",
+      category: "Actions",
+      action: async () => {
+        await fetch("/api/newspaper/generate", { method: "POST" });
+        refresh();
+      },
+    },
+    {
+      id: "capture-note",
+      name: "Quick Note",
+      description: "Capture a quick note",
+      icon: "📝",
+      category: "Capture",
+      action: () => {
+        const note = prompt("Enter your note:");
+        if (note) {
+          fetch("/api/capture", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: note, type: "note" }),
+          });
+        }
+      },
+    },
+    {
+      id: "capture-task",
+      name: "Quick Task",
+      description: "Add a task to your list",
+      icon: "☑️",
+      category: "Capture",
+      action: () => {
+        const task = prompt("Enter your task:");
+        if (task) {
+          fetch("/api/capture", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: task, type: "task" }),
+          });
+        }
+      },
+    },
+    {
+      id: "open-github",
+      name: "Open GitHub Repo",
+      description: "Go to clawdbot-dashboard repo",
+      icon: "🐙",
+      category: "Links",
+      action: () => window.open("https://github.com/jpequegn/clawdbot-dashboard", "_blank"),
+    },
+    {
+      id: "open-clawdbot",
+      name: "Open Clawdbot Docs",
+      description: "Documentation for Clawdbot",
+      icon: "📚",
+      category: "Links",
+      action: () => window.open("https://docs.clawd.bot", "_blank"),
+    },
+  ];
 
   // Loading state
   if (loading && !data) {
@@ -152,9 +242,12 @@ export default function Dashboard() {
               <span className="ml-2 text-destructive">(refresh failed)</span>
             )}
           </div>
-          <Button variant="outline" size="sm" onClick={refresh}>
-            ↻ Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Press ⌘K for commands</span>
+            <Button variant="outline" size="sm" onClick={refresh}>
+              ↻ Refresh
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -174,26 +267,25 @@ export default function Dashboard() {
           <SportsWidget teams={sportsData.teams} />
           <UsageWidget usage={data?.usage || null} />
 
-          {/* Row 3: Daily Briefing (spans 2 cols) & Newspaper */}
+          {/* Row 3: Topics (2 cols) & Timeline */}
+          <TopicsWidget topics={data?.topics || []} />
+          <TimelineWidget events={data?.timeline || []} />
+
+          {/* Row 4: Daily Briefing (2 cols) & Newspaper */}
           <BriefingWidget briefing={data?.briefing || null} />
           <NewspaperWidget 
             imagePath={data?.newspaperPath || null}
             date={today}
           />
 
-          {/* Row 4: Twitter Digest (spans 2 cols) + placeholder */}
+          {/* Row 5: Twitter Digest (2 cols) + Quick Capture */}
           <TwitterWidget tweets={data?.tweets || []} />
-          
-          {/* Placeholder for more widgets */}
-          <div className="border-2 border-dashed border-muted rounded-lg p-6 flex items-center justify-center text-muted-foreground">
-            <div className="text-center">
-              <p className="text-2xl mb-2">🚧</p>
-              <p className="text-sm">Phase 4 coming...</p>
-              <p className="text-xs mt-1">Topics, Timeline, Command Palette</p>
-            </div>
-          </div>
+          <QuickCaptureWidget />
         </div>
       </main>
+
+      {/* Command Palette */}
+      <CommandPalette commands={commands} />
     </div>
   );
 }
