@@ -12,6 +12,7 @@ const defaultSettings: DashboardSettings = {
   mode: "work",
   visibleWidgets: [
     "status",
+    "tabs",
     "calendar",
     "email",
     "cron",
@@ -23,6 +24,7 @@ const defaultSettings: DashboardSettings = {
     "newspaper",
     "twitter",
     "capture",
+    "kanban",
   ],
   layout: "default",
 };
@@ -30,6 +32,7 @@ const defaultSettings: DashboardSettings = {
 // Work mode hides personal widgets
 const workModeWidgets = [
   "status",
+  "tabs",
   "calendar",
   "email",
   "cron",
@@ -38,11 +41,13 @@ const workModeWidgets = [
   "timeline",
   "briefing",
   "capture",
+  "kanban",
 ];
 
 // Personal mode shows more relaxed widgets
 const personalModeWidgets = [
   "status",
+  "tabs",
   "calendar",
   "sports",
   "topics",

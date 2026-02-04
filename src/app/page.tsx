@@ -14,6 +14,8 @@ import { NewspaperWidget } from "@/components/widgets/NewspaperWidget";
 import { TopicsWidget } from "@/components/widgets/TopicsWidget";
 import { QuickCaptureWidget } from "@/components/widgets/QuickCaptureWidget";
 import { TimelineWidget } from "@/components/widgets/TimelineWidget";
+import { TabManagerWidget } from "@/components/widgets/TabManagerWidget";
+import { KanbanWidget } from "@/components/widgets/KanbanWidget";
 import { CommandPalette } from "@/components/CommandPalette";
 import { SettingsPanel } from "@/components/SettingsPanel";
 import { useDashboard } from "@/hooks/useDashboard";
@@ -159,7 +161,7 @@ export default function Dashboard() {
       name: "Open GitHub Repo",
       icon: "🐙",
       category: "Links",
-      action: () => window.open("https://github.com/jpequegn/clawdbot-dashboard", "_blank"),
+      action: () => { window.open("https://github.com/jpequegn/clawdbot-dashboard", "_blank"); },
     },
   ];
 
@@ -255,6 +257,7 @@ export default function Dashboard() {
               channels={channels}
             />
           )}
+          {isVisible("tabs") && <TabManagerWidget maxTabs={5} warnAt={4} />}
           {isVisible("calendar") && <CalendarWidget events={calendarEvents} />}
           {isVisible("email") && (
             <EmailWidget emails={emails} unreadCount={emails.length} />
@@ -278,6 +281,9 @@ export default function Dashboard() {
           {/* Row 5 */}
           {isVisible("twitter") && <TwitterWidget tweets={data?.tweets || []} />}
           {isVisible("capture") && <QuickCaptureWidget />}
+
+          {/* Kanban Board - Full Width */}
+          {isVisible("kanban") && <KanbanWidget />}
         </div>
       </main>
 

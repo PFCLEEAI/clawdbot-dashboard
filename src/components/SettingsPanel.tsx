@@ -18,6 +18,7 @@ interface SettingsPanelProps {
 
 const allWidgets = [
   { id: "status", name: "Gateway Status", icon: "🟢" },
+  { id: "tabs", name: "Tab Manager", icon: "🗂️" },
   { id: "calendar", name: "Calendar", icon: "📅" },
   { id: "email", name: "Email", icon: "📬" },
   { id: "cron", name: "Cron Jobs", icon: "⏰" },
@@ -29,6 +30,7 @@ const allWidgets = [
   { id: "newspaper", name: "The Daily Clawd", icon: "🗞️" },
   { id: "twitter", name: "Twitter Digest", icon: "🐦" },
   { id: "capture", name: "Quick Capture", icon: "✏️" },
+  { id: "kanban", name: "Kanban Board", icon: "📋" },
 ];
 
 export function SettingsPanel({
