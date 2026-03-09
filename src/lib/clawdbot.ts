@@ -4,6 +4,7 @@
  */
 
 import { execSync } from "child_process";
+import Database from "better-sqlite3";
 
 export interface GatewayStatus {
   running: boolean;
@@ -438,9 +439,125 @@ export async function getTimelineEvents(): Promise<TimelineEvent[]> {
   return events.slice(0, 10);
 }
 
+export interface SNSStats {
+  today: {
+    posts: number;
+    comments: number;
+    scraped: number;
+  };
+  pendingDrafts: number;
+  weeklyTrend: { date: string; posts: number; comments: number; scraped: number }[];
+  recentComments: { platform: string; targetUrl: string; commentText: string; postedAt: string }[];
+}
+
+export async function getSNSStats(): Promise<SNSStats> {
+  const defaults: SNSStats = {
+    today: { posts: 0, comments: 0, scraped: 0 },
+    pendingDrafts: 0,
+    weeklyTrend: [],
+    recentComments: [],
+  };
+
+  let db: InstanceType<typeof Database> | null = null;
+  try {
+    const dbPath = `${process.env.HOME}/clawd/sns-automation/sns_content.db`;
+    db = new Database(dbPath, { readonly: true });
+
+    const today = new Date().toISOString().split("T")[0];
+
+    // Today's stats
+    const todayRow = db.prepare("SELECT * FROM daily_stats WHERE date = ?").get(today) as any;
+    if (todayRow) {
+      defaults.today = {
+        posts: todayRow.posts || 0,
+        comments: todayRow.comments || 0,
+        scraped: todayRow.scraped || 0,
+      };
+    }
+
+    // Pending drafts
+    const draftRow = db.prepare("SELECT COUNT(*) as count FROM repurposed_content WHERE status = 'draft'").get() as any;
+    defaults.pendingDrafts = draftRow?.count || 0;
+
+    // Weekly trend
+    const weekRows = db.prepare("SELECT * FROM daily_stats WHERE date >= date('now', '-7 days') ORDER BY date ASC").all() as any[];
+    defaults.weeklyTrend = (weekRows || []).map((r: any) => ({
+      date: r.date,
+      posts: r.posts || 0,
+      comments: r.comments || 0,
+      scraped: r.scraped || 0,
+    }));
+
+    // Recent comments
+    const commentRows = db.prepare("SELECT * FROM posted_comments ORDER BY posted_at DESC LIMIT 10").all() as any[];
+    defaults.recentComments = (commentRows || []).map((r: any) => ({
+      platform: r.platform || "",
+      targetUrl: r.target_url || "",
+      commentText: r.comment_text || "",
+      postedAt: r.posted_at || "",
+    }));
+
+    return defaults;
+  } catch {
+    return defaults;
+  } finally {
+    if (db) {
+      try { db.close(); } catch { /* ignore */ }
+    }
+  }
+}
+
+export async function triggerCronJob(name: string): Promise<{ success: boolean; output?: string; error?: string }> {
+  const result = exec(`clawdbot cron run ${name} 2>&1`, 60000);
+  if (result !== null) {
+    return { success: true, output: result };
+  }
+  return { success: false, error: "Failed to trigger cron job" };
+}
+
+export interface CronRun {
+  jobName: string;
+  status: "ok" | "error";
+  startedAt: string;
+  duration?: number;
+  error?: string;
+}
+
+export async function getCronRuns(limit: number = 20): Promise<CronRun[]> {
+  const result = exec(`clawdbot cron runs --limit ${limit} --json 2>/dev/null`);
+  if (result) {
+    try {
+      const data = JSON.parse(result);
+      return (data.runs || data || []).map((r: any) => ({
+        jobName: r.jobName || r.name || "unknown",
+        status: r.status || "ok",
+        startedAt: r.startedAt || r.timestamp || "",
+        duration: r.durationMs || r.duration,
+        error: r.error,
+      }));
+    } catch { /* fall through */ }
+  }
+  return [];
+}
+
+export async function chatWithClawdbot(message: string): Promise<{ response: string }> {
+  // Sanitize message to prevent command injection
+  const sanitized = message.replace(/[`$\\!"]/g, "");
+  const result = exec(`clawdbot ask "${sanitized}" --json 2>/dev/null`, 60000);
+  if (result) {
+    try {
+      const data = JSON.parse(result);
+      return { response: data.response || data.text || data.answer || result };
+    } catch {
+      return { response: result };
+    }
+  }
+  return { response: "No response from clawdbot" };
+}
+
 // Aggregate all dashboard data
 export async function getDashboardData() {
-  const [gateway, cron, weather, emails, calendar, usage, tweets, newspaperPath, briefing, topics, timeline] = await Promise.all([
+  const [gateway, cron, weather, emails, calendar, usage, tweets, newspaperPath, briefing, topics, timeline, snsStats] = await Promise.all([
     getGatewayStatus(),
     getCronJobs(),
     getWeather(),
@@ -452,8 +569,9 @@ export async function getDashboardData() {
     getBriefingData(),
     getTopics(),
     getTimelineEvents(),
+    getSNSStats(),
   ]);
-  
+
   return {
     gateway,
     cron,
@@ -466,6 +584,7 @@ export async function getDashboardData() {
     briefing,
     topics,
     timeline,
+    snsStats,
     fetchedAt: new Date().toISOString(),
   };
 }

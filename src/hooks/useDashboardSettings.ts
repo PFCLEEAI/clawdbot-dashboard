@@ -11,50 +11,37 @@ interface DashboardSettings {
 const defaultSettings: DashboardSettings = {
   mode: "work",
   visibleWidgets: [
-    "status",
-    "tabs",
-    "calendar",
-    "email",
     "cron",
-    "sports",
-    "usage",
-    "topics",
-    "timeline",
-    "briefing",
-    "newspaper",
-    "twitter",
+    "sns-engagement",
+    "saas-ideas",
+    "clawdbot-control",
+    "email",
+    "calendar",
+    "status",
     "capture",
-    "kanban",
   ],
   layout: "default",
 };
 
 // Work mode hides personal widgets
 const workModeWidgets = [
-  "status",
-  "tabs",
-  "calendar",
-  "email",
   "cron",
-  "usage",
-  "topics",
-  "timeline",
-  "briefing",
+  "sns-engagement",
+  "saas-ideas",
+  "clawdbot-control",
+  "email",
+  "calendar",
+  "status",
   "capture",
-  "kanban",
 ];
 
 // Personal mode shows more relaxed widgets
 const personalModeWidgets = [
+  "cron",
+  "sns-engagement",
   "status",
-  "tabs",
-  "calendar",
-  "sports",
-  "topics",
-  "briefing",
-  "newspaper",
-  "twitter",
   "capture",
+  "calendar",
 ];
 
 const STORAGE_KEY = "clawdbot-dashboard-settings";

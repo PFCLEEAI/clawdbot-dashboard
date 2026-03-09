@@ -31,6 +31,9 @@ const allWidgets = [
   { id: "twitter", name: "Twitter Digest", icon: "🐦" },
   { id: "capture", name: "Quick Capture", icon: "✏️" },
   { id: "kanban", name: "Kanban Board", icon: "📋" },
+  { id: "saas-ideas", name: "SaaS Ideas", icon: "💡" },
+  { id: "sns-engagement", name: "SNS Engagement", icon: "📊" },
+  { id: "clawdbot-control", name: "Clawdbot Control", icon: "🦞" },
 ];
 
 export function SettingsPanel({

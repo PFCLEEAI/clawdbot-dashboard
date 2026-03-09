@@ -89,6 +89,12 @@ export interface DashboardData {
     timestamp: string;
     status?: "success" | "error" | "pending";
   }[];
+  snsStats?: {
+    today: { posts: number; comments: number; scraped: number };
+    pendingDrafts: number;
+    weeklyTrend: { date: string; posts: number; comments: number; scraped: number }[];
+    recentComments: { platform: string; targetUrl: string; commentText: string; postedAt: string }[];
+  };
   fetchedAt: string;
 }
 

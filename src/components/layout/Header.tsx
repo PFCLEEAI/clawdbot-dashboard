@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
@@ -57,6 +58,19 @@ export function Header({ weather, mode, greeting, onSettingsClick }: HeaderProps
               {mode === "work" ? "💼 Work" : "🏠 Personal"}
             </Badge>
           )}
+
+          {/* Navigation Links */}
+          <nav className="flex items-center gap-1 ml-4 border-l pl-4">
+            <Link href="/chat">
+              <Button variant="ghost" size="sm">💬 Chat</Button>
+            </Link>
+            <Link href="/saas-ideas">
+              <Button variant="ghost" size="sm">💡 SaaS Ideas</Button>
+            </Link>
+            <Link href="/kanban">
+              <Button variant="ghost" size="sm">📋 Projects</Button>
+            </Link>
+          </nav>
         </div>
 
         <div className="flex items-center gap-4">
