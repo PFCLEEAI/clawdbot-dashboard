@@ -557,19 +557,13 @@ export async function chatWithClawdbot(message: string): Promise<{ response: str
 
 // Aggregate all dashboard data
 export async function getDashboardData() {
-  const [gateway, cron, weather, emails, calendar, usage, tweets, newspaperPath, briefing, topics, timeline, snsStats] = await Promise.all([
+  const [gateway, cron, weather, emails, calendar, briefing] = await Promise.all([
     getGatewayStatus(),
     getCronJobs(),
     getWeather(),
     getEmails(),
     getCalendarEvents(),
-    getUsageStats(),
-    getTweets(),
-    getNewspaperPath(),
     getBriefingData(),
-    getTopics(),
-    getTimelineEvents(),
-    getSNSStats(),
   ]);
 
   return {
@@ -578,13 +572,7 @@ export async function getDashboardData() {
     weather,
     emails,
     calendar,
-    usage,
-    tweets,
-    newspaperPath,
     briefing,
-    topics,
-    timeline,
-    snsStats,
     fetchedAt: new Date().toISOString(),
   };
 }

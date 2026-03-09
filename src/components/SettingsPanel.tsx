@@ -17,23 +17,16 @@ interface SettingsPanelProps {
 }
 
 const allWidgets = [
-  { id: "status", name: "Gateway Status", icon: "🟢" },
-  { id: "tabs", name: "Tab Manager", icon: "🗂️" },
-  { id: "calendar", name: "Calendar", icon: "📅" },
-  { id: "email", name: "Email", icon: "📬" },
-  { id: "cron", name: "Cron Jobs", icon: "⏰" },
-  { id: "sports", name: "Sports", icon: "⚽" },
-  { id: "usage", name: "Usage Stats", icon: "📊" },
-  { id: "topics", name: "Topics & Projects", icon: "📋" },
-  { id: "timeline", name: "Activity Timeline", icon: "📜" },
-  { id: "briefing", name: "Daily Briefing", icon: "📰" },
-  { id: "newspaper", name: "The Daily Clawd", icon: "🗞️" },
-  { id: "twitter", name: "Twitter Digest", icon: "🐦" },
-  { id: "capture", name: "Quick Capture", icon: "✏️" },
-  { id: "kanban", name: "Kanban Board", icon: "📋" },
+  { id: "reports", name: "Reports (Reddit/X)", icon: "📈" },
   { id: "saas-ideas", name: "SaaS Ideas", icon: "💡" },
   { id: "sns-engagement", name: "SNS Engagement", icon: "📊" },
+  { id: "cron", name: "Cron Jobs", icon: "⏰" },
   { id: "clawdbot-control", name: "Clawdbot Control", icon: "🦞" },
+  { id: "email", name: "Email", icon: "📬" },
+  { id: "calendar", name: "Calendar", icon: "📅" },
+  { id: "status", name: "Gateway Status", icon: "🟢" },
+  { id: "capture", name: "Quick Capture", icon: "✏️" },
+  { id: "briefing", name: "Daily Briefing", icon: "📰" },
 ];
 
 export function SettingsPanel({

@@ -11,9 +11,10 @@ interface DashboardSettings {
 const defaultSettings: DashboardSettings = {
   mode: "work",
   visibleWidgets: [
-    "cron",
-    "sns-engagement",
+    "reports",
     "saas-ideas",
+    "sns-engagement",
+    "cron",
     "clawdbot-control",
     "email",
     "calendar",
@@ -23,11 +24,12 @@ const defaultSettings: DashboardSettings = {
   layout: "default",
 };
 
-// Work mode hides personal widgets
+// Work mode — focused on business
 const workModeWidgets = [
-  "cron",
-  "sns-engagement",
+  "reports",
   "saas-ideas",
+  "sns-engagement",
+  "cron",
   "clawdbot-control",
   "email",
   "calendar",
@@ -35,13 +37,13 @@ const workModeWidgets = [
   "capture",
 ];
 
-// Personal mode shows more relaxed widgets
+// Personal mode — minimal
 const personalModeWidgets = [
-  "cron",
+  "reports",
   "sns-engagement",
+  "calendar",
   "status",
   "capture",
-  "calendar",
 ];
 
 const STORAGE_KEY = "clawdbot-dashboard-settings";
