@@ -11,6 +11,7 @@ interface DashboardSettings {
 const defaultSettings: DashboardSettings = {
   mode: "work",
   visibleWidgets: [
+    "memory",
     "reports",
     "saas-ideas",
     "sns-engagement",
@@ -26,6 +27,7 @@ const defaultSettings: DashboardSettings = {
 
 // Work mode — focused on business
 const workModeWidgets = [
+  "memory",
   "reports",
   "saas-ideas",
   "sns-engagement",
@@ -39,6 +41,7 @@ const workModeWidgets = [
 
 // Personal mode — minimal
 const personalModeWidgets = [
+  "memory",
   "reports",
   "sns-engagement",
   "calendar",
@@ -47,6 +50,9 @@ const personalModeWidgets = [
 ];
 
 const STORAGE_KEY = "clawdbot-dashboard-settings";
+
+// Bump this version whenever the widget list changes to force a reset
+const SETTINGS_VERSION = 3;
 
 export function useDashboardSettings() {
   const [settings, setSettings] = useState<DashboardSettings>(defaultSettings);
@@ -58,7 +64,13 @@ export function useDashboardSettings() {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        setSettings({ ...defaultSettings, ...parsed });
+        // If settings are from an older version, reset to defaults
+        if (!parsed._version || parsed._version < SETTINGS_VERSION) {
+          localStorage.removeItem(STORAGE_KEY);
+          setSettings(defaultSettings);
+        } else {
+          setSettings({ ...defaultSettings, ...parsed });
+        }
       }
     } catch (e) {
       console.error("Failed to load settings:", e);
@@ -70,7 +82,7 @@ export function useDashboardSettings() {
   useEffect(() => {
     if (isLoaded) {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...settings, _version: SETTINGS_VERSION }));
       } catch (e) {
         console.error("Failed to save settings:", e);
       }

@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface SNSStats {
   today: { posts: number; comments: number; scraped: number };
@@ -151,6 +153,13 @@ export function SNSEngagementWidget() {
         </div>
 
         {/* Recent Comments */}
+        {/* Calendar Link */}
+        <Link href="/sns-calendar">
+          <Button variant="outline" size="sm" className="w-full text-xs">
+            View Full Calendar →
+          </Button>
+        </Link>
+
         {stats?.recentComments && stats.recentComments.length > 0 && (
           <div>
             <div className="text-xs text-muted-foreground mb-2">

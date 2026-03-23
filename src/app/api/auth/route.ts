@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const PASSWORD = "Henry2026";
+const PASSWORD = "qR_yCTZVYFpErEXqVWvBBg";
 const COOKIE_NAME = "clawdbot-auth";
 
 export async function POST(request: NextRequest) {

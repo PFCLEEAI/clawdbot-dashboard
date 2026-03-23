@@ -17,6 +17,7 @@ interface SettingsPanelProps {
 }
 
 const allWidgets = [
+  { id: "memory", name: "Memory Vault", icon: "🧠" },
   { id: "reports", name: "Reports (Reddit/X)", icon: "📈" },
   { id: "saas-ideas", name: "SaaS Ideas", icon: "💡" },
   { id: "sns-engagement", name: "SNS Engagement", icon: "📊" },

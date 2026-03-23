@@ -12,6 +12,7 @@ import { ClawdbotControlWidget } from "@/components/widgets/ClawdbotControlWidge
 import { QuickCaptureWidget } from "@/components/widgets/QuickCaptureWidget";
 import { ReportsWidget } from "@/components/widgets/ReportsWidget";
 import { BriefingWidget } from "@/components/widgets/BriefingWidget";
+import { MemoryWidget } from "@/components/widgets/MemoryWidget";
 import { CommandPalette } from "@/components/CommandPalette";
 import { SettingsPanel } from "@/components/SettingsPanel";
 import { useDashboard } from "@/hooks/useDashboard";
@@ -54,6 +55,8 @@ export default function Dashboard() {
     { id: "capture-note", name: "Quick Note", description: "Capture a quick note", icon: "📝", category: "Capture", action: () => { const note = prompt("Enter your note:"); if (note) fetch("/api/capture", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: note, type: "note" }) }); } },
     { id: "capture-task", name: "Quick Task", description: "Add a task", icon: "☑️", category: "Capture", action: () => { const task = prompt("Enter your task:"); if (task) fetch("/api/capture", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: task, type: "task" }) }); } },
     { id: "saas-ideas", name: "Open SaaS Ideas", description: "Browse and validate SaaS opportunities", icon: "💡", category: "Links", action: () => { window.location.href = "/saas-ideas"; } },
+    { id: "sns-calendar", name: "SNS Calendar", description: "View SNS content calendar and activity", icon: "📅", category: "Links", action: () => { window.location.href = "/sns-calendar"; } },
+    { id: "memory", name: "Memory Vault", description: "Browse your knowledge graph", icon: "🧠", category: "Links", action: () => { window.location.href = "/memory"; } },
   ];
 
   if ((loading && !data) || !isLoaded) {
@@ -112,6 +115,9 @@ export default function Dashboard() {
         </div>
 
         <div className="space-y-6">
+          {/* Memory Vault */}
+          {isVisible("memory") && <MemoryWidget />}
+
           {/* Row 1: Reports + SaaS Ideas (2 columns — the main business view) */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {isVisible("reports") && <ReportsWidget />}

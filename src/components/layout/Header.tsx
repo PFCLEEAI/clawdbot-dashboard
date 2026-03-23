@@ -61,6 +61,9 @@ export function Header({ weather, mode, greeting, onSettingsClick }: HeaderProps
 
           {/* Navigation Links */}
           <nav className="flex items-center gap-1 ml-4 border-l pl-4">
+            <Link href="/memory">
+              <Button variant="ghost" size="sm">🧠 Memory</Button>
+            </Link>
             <Link href="/chat">
               <Button variant="ghost" size="sm">💬 Chat</Button>
             </Link>

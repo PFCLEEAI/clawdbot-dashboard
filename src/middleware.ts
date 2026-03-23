@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PASSWORD = "Henry2026";
+const PASSWORD = "qR_yCTZVYFpErEXqVWvBBg";
 const COOKIE_NAME = "clawdbot-auth";
 
 export function middleware(request: NextRequest) {
