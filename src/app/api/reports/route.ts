@@ -9,7 +9,7 @@ export const revalidate = 0;
 const BLOB_PREFIX = "reports";
 const IS_VERCEL = process.env.VERCEL === "1";
 
-const HOME = process.env.HOME || "/Users/clawdbothenry";
+const HOME = process.env.HOME || "";
 const CLAWD = path.join(HOME, "clawd");
 const ENGAGEMENT_DB = path.join(CLAWD, "reddit_db/reddit_engagement.db");
 const MARKETING_DIR = path.join(CLAWD, "reddit_marketing");

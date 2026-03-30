@@ -8,7 +8,7 @@ export const revalidate = 0;
 
 const BLOB_PREFIX = "sns-calendar";
 const IS_VERCEL = process.env.VERCEL === "1";
-const HOME = process.env.HOME || "/Users/clawdbothenry";
+const HOME = process.env.HOME || "";
 const CLAWD = path.join(HOME, "clawd");
 const SNS_DB_PATH = path.join(CLAWD, "sns-automation/sns_content.db");
 const MASTER_DB_PATH = path.join(CLAWD, "clawdbot_db/clawdbot_master.db");

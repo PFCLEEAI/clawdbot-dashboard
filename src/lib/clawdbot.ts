@@ -213,7 +213,7 @@ export async function getCalendarEvents(): Promise<CalendarEvent[]> {
   const to = tomorrow.toISOString().split("T")[0] + "T23:59:59.999Z";
   
   const result = exec(
-    `gog calendar events --account julien.pequegnot@googlemail.com --all --json --from "${from}" --to "${to}"`
+    `gog calendar events --account ${process.env.CALENDAR_ACCOUNT || ""} --all --json --from "${from}" --to "${to}"`
   );
   
   if (result) {
@@ -359,7 +359,7 @@ export interface TimelineEvent {
 
 export async function getTopics(): Promise<Topic[]> {
   // Read from TODO.md on the external drive
-  const todoPath = "/Volumes/Extreme Pro/pai-context/TODO.md";
+  const todoPath = process.env.TODO_PATH || "";
   const result = exec(`cat "${todoPath}" 2>/dev/null`);
   
   if (!result) return [];

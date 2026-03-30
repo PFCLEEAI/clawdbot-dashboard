@@ -8,7 +8,7 @@ export const revalidate = 0;
 
 const BLOB_PREFIX = "memory";
 const IS_VERCEL = process.env.VERCEL === "1";
-const HOME = process.env.HOME || "/Users/clawdbothenry";
+const HOME = process.env.HOME || "";
 const VAULT_PATH = path.join(HOME, ".clawdbot/memory");
 
 // ============ TYPES ============

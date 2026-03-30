@@ -53,7 +53,7 @@ async function getLocalData() {
     const path = await import("path");
     // Use the new clean master database
     const DB_PATH = path.join(
-      process.env.HOME || "/Users/clawdbothenry",
+      process.env.HOME || "",
       "clawd/clawdbot_db/clawdbot_master.db"
     );
     return new Database(DB_PATH, { readonly: false });
